@@ -6,7 +6,7 @@ load_dotenv()
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.pakakumi.com")
 WS_URL = os.getenv("WS_URL", "wss://api.pakakumi.com/socket.io/?v=112&EIO=4&transport=websocket")
 
-DB_PATH = os.getenv("DB_PATH", "data/pakakumi.db")
+DB_PATH = os.getenv("DB_PATH", "/data/pakakumi.db")
 MODEL_PATH = os.getenv("MODEL_PATH", "models/latest_model.pkl")
 RETRAIN_INTERVAL_HOURS = int(os.getenv("RETRAIN_INTERVAL_HOURS", 6))
 TIME_DECAY_FACTOR = float(os.getenv("TIME_DECAY_FACTOR", 0.97))
