@@ -1,22 +1,32 @@
-import pickle
-from lightgbm import LGBMRegressor
-from pakakumi_analyzer.app.config import MODEL_PATH
+# pakakumi_analyzer/app/models.py
 
-def train_model(df):
-    X = df.drop(columns=["crash_point", "timestamp", "weight"])
-    y = df["crash_point"]
-    weights = df["weight"]
+import numpy as np
+import random
 
-    model = LGBMRegressor(n_estimators=200, learning_rate=0.05)
-    model.fit(X, y, sample_weight=weights)
+# Simple placeholder model for now
+# Later we can load a trained model (like scikit-learn or XGBoost)
+# but this ensures no ImportError and works in production
 
-    with open(MODEL_PATH, "wb") as f:
-        pickle.dump(model, f)
-    return model
+def predict_cashout(recent_rounds):
+    """
+    Predicts the next cashout multiplier based on recent game rounds.
+    For now, this is a stub model that returns a simulated prediction.
 
-def load_model():
-    try:
-        with open(MODEL_PATH, "rb") as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return LGBMRegressor()
+    Args:
+        recent_rounds (list[float]): List of recent cashout multipliers.
+
+    Returns:
+        float: Predicted next cashout multiplier.
+    """
+
+    if not recent_rounds:
+        # Default prediction if no data
+        return round(random.uniform(1.1, 2.0), 2)
+
+    # Basic heuristic: weighted average with randomness
+    avg = np.mean(recent_rounds)
+    noise = random.uniform(-0.3, 0.3)
+    prediction = max(1.0, avg + noise)
+
+    return round(prediction, 2)
+
