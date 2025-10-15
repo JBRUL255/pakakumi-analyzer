@@ -1,22 +1,27 @@
 # pakakumi_analyzer/app/serve.py
 
 from fastapi import FastAPI
-from pakakumi_analyzer.app.models import predict_cashout
 from pakakumi_analyzer.app.db import get_latest_rounds
+from pakakumi_analyzer.app.models import predict_cashout
+import traceback
 
-app = FastAPI(title="PakaKumi Analyzer API")
+app = FastAPI()
 
 @app.get("/")
-def home():
-    return {"message": "Welcome to PakaKumi Analyzer API 🚀"}
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
+def root():
+    return {"message": "Paka Kumi Analyzer Live ✅"}
 
 @app.get("/predict")
-def predict_endpoint():
-    # Fetch the latest 50 rounds from DB and predict the next one
-    recent_rounds = get_latest_rounds(limit=50)
-    cashout = predict_cashout(recent_rounds)
-    return {"predicted_cashout": cashout}
+def predict():
+    try:
+        rounds = get_latest_rounds(limit=50)
+        if not rounds:
+            return {"error": "No data found in database yet."}
+
+        prediction = predict_cashout(rounds)
+        return {"predicted_cashout": round(prediction, 2)}
+
+    except Exception as e:
+        print("❌ Prediction error:", e)
+        print(traceback.format_exc())
+        return {"error": str(e)}
