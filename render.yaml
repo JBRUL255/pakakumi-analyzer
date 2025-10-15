@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: pakakumi-analyzer
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash entrypoint.sh
+    envVars:
+      - key: API_BASE_URL
+        value: https://api.pakakumi.com
+      - key: WS_URL
+        value: wss://api.pakakumi.com/socket.io/?v=112&EIO=4&transport=websocket
