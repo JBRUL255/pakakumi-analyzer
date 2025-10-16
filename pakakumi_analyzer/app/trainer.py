@@ -1,5 +1,7 @@
 # pakakumi_analyzer/app/trainer.py
 
+from pakakumi_analyzer.app.db import init_db
+init_db()
 from pakakumi_analyzer.app.models import train_model
 from pakakumi_analyzer.app.db import get_all_rounds
 
