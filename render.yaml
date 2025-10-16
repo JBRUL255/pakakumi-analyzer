@@ -3,9 +3,10 @@ services:
     name: pakakumi-analyzer
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: bash entrypoint.sh
-    envVars:
-      - key: API_BASE_URL
-        value: https://api.pakakumi.com
-      - key: WS_URL
-        value: wss://api.pakakumi.com/socket.io/?v=112&EIO=4&transport=websocket
+    startCommand: uvicorn pakakumi_analyzer.app.serve:app --host 0.0.0.0 --port $PORT
+
+  - type: worker
+    name: pakakumi-collector
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run_collector.py
