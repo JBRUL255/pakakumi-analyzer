@@ -1,6 +1,6 @@
-from fastapi import FastAPI
 import asyncio
 import threading
+from fastapi import FastAPI
 from pakakumi_analyzer.app.db import init_db
 from pakakumi_analyzer.app.models import predict_cashout
 from pakakumi_analyzer.app.collector import run_collector_loop
@@ -13,37 +13,25 @@ async def startup_event():
     init_db()
     print("✅ Database ready.")
 
-    def background_collector():
+    # Start collector in background thread
+    def start_collector():
+        print("🕸️ Collector thread starting...")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(run_collector_loop())
 
-    thread = threading.Thread(target=background_collector, daemon=True)
+    thread = threading.Thread(target=start_collector, daemon=True)
     thread.start()
-    print("🕸️ Collector thread started.")
-
-    # Optional: keep Render awake by pinging itself
-    async def keep_alive():
-        while True:
-            try:
-                import httpx
-                async with httpx.AsyncClient() as client:
-                    await client.get("https://pakakumi-analyzer.onrender.com/")
-                print("🔁 Keep-alive ping sent.")
-            except Exception as e:
-                print(f"⚠️ Keep-alive failed: {e}")
-            await asyncio.sleep(300)  # every 5 min
-
-    asyncio.create_task(keep_alive())
+    print("🕸️ Collector started successfully.")
 
 @app.get("/")
 def home():
-    return {"status": "running"}
+    return {"status": "running", "message": "Analyzer active and collecting data."}
 
 @app.get("/predict")
 def predict():
     try:
         result = predict_cashout()
-        return {"cashout_point": round(result, 2)}
+        return {"predicted_cashout": round(result, 2)}
     except Exception as e:
         return {"error": str(e)}
