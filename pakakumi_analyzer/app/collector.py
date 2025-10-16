@@ -1,5 +1,7 @@
 # pakakumi_analyzer/app/collector.py
 
+from pakakumi_analyzer.app.db import init_db
+init_db()
 import asyncio
 import socketio
 from pakakumi_analyzer.app.db import insert_round, init_db
