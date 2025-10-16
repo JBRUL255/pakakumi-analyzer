@@ -1,45 +1,41 @@
-# pakakumi_analyzer/app/db.py
-import sqlite3
 import os
-from pakakumi_analyzer.app.config import DB_PATH
+import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    if DATABASE_URL:
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    else:
+        conn = sqlite3.connect("data.db")
     return conn
 
 def init_db():
     conn = get_db()
-    conn.execute("""
+    c = conn.cursor()
+    c.execute("""
         CREATE TABLE IF NOT EXISTS rounds (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cashout REAL NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
+            id SERIAL PRIMARY KEY,
+            crash_point REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """)
     conn.commit()
     conn.close()
 
-def insert_round(cashout: float):
+def insert_round(crash_point: float):
     conn = get_db()
-    conn.execute("INSERT INTO rounds (cashout) VALUES (?)", (cashout,))
+    c = conn.cursor()
+    c.execute("INSERT INTO rounds (crash_point) VALUES (%s);", (crash_point,))
     conn.commit()
     conn.close()
 
-def get_latest_rounds(limit=50):
+def get_latest_rounds(limit: int = 100):
     conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT cashout FROM rounds ORDER BY id DESC LIMIT ?", (limit,))
-    rows = [row["cashout"] for row in cur.fetchall()]
+    c = conn.cursor()
+    c.execute("SELECT crash_point FROM rounds ORDER BY id DESC LIMIT %s;", (limit,))
+    rows = c.fetchall()
     conn.close()
-    return rows
-
-def get_all_rounds():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT cashout FROM rounds")
-    rows = [row["cashout"] for row in cur.fetchall()]
-    conn.close()
-    return rows
+    return [row["crash_point"] for row in rows]
