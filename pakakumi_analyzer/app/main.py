@@ -1,26 +1,38 @@
-# pakakumi_analyzer/app/main.py
-import threading
-import asyncio
-import uvicorn
 from fastapi import FastAPI
 from pakakumi_analyzer.app.db import init_db
-from pakakumi_analyzer.app.routes import router
-from pakakumi_analyzer.app.collector import collect_data_continuously
+from pakakumi_analyzer.app.models import predict_cashout
+import asyncio
+import threading
+from pakakumi_analyzer.app.collector import run_collector_loop
 
-app = FastAPI(title="PakaKumi Analyzer API")
-app.include_router(router)
+app = FastAPI(title="PakaKumi Analyzer")
 
 @app.on_event("startup")
 async def startup_event():
-    print("🚀 Initializing database...")
+    # Initialize DB
+    print("🗄️ Initializing database...")
     init_db()
+    print("✅ Database ready.")
 
-    # Start background collector
-    def run_collector():
-        asyncio.run(collect_data_continuously())
+    # Start collector in background
+    def start_collector():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(run_collector_loop())
 
-    threading.Thread(target=run_collector, daemon=True).start()
-    print("🛰️ Background data collector started.")
+    threading.Thread(target=start_collector, daemon=True).start()
+    print("🕸️ Collector started in background.")
 
-if __name__ == "__main__":
-    uvicorn.run("pakakumi_analyzer.app.main:app", host="0.0.0.0", port=8000)
+
+@app.get("/")
+def home():
+    return {"message": "Welcome to PakaKumi Analyzer!"}
+
+
+@app.get("/predict")
+def predict():
+    try:
+        prediction = predict_cashout()
+        return {"cashout_point": round(prediction, 2)}
+    except Exception as e:
+        return {"error": str(e)}
