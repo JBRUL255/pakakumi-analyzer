@@ -1,5 +1,4 @@
 import asyncio
-import threading
 from fastapi import FastAPI
 from pakakumi_analyzer.app.db import init_db
 from pakakumi_analyzer.app.models import predict_cashout
@@ -13,16 +12,9 @@ async def startup_event():
     init_db()
     print("✅ Database ready.")
 
-    # Start collector in background thread
-    def start_collector():
-        print("🕸️ Collector thread starting...")
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(run_collector_loop())
-
-    thread = threading.Thread(target=start_collector, daemon=True)
-    thread.start()
-    print("🕸️ Collector started successfully.")
+    # Start collector safely within FastAPI event loop
+    print("🕸️ Launching collector loop...")
+    asyncio.create_task(run_collector_loop())
 
 @app.get("/")
 def home():
